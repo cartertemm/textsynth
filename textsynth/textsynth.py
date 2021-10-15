@@ -82,7 +82,7 @@ class TextSynth:
 				continue
 			line = line.decode("utf-8")
 			j = json.loads(line)
-			yield (j.get("text"), j.get("reached_end"), j.get("reached_end"))
+			yield (j.get("text"), j.get("reached_end"), j.get("total_tokens", 0))
 
 	def complete(self, prompt, **kwargs):
 		kwargs["stream"] = False
