@@ -31,21 +31,30 @@ class TextSynth:
 		spl = model.split("_")
 		return spl[0].lower() + "_" + spl[1]
 
-	def perform_request(self, prompt, temperature=1.0, top_k=40, top_p=0.9, seed=0, model="GPTJ_6B", stream=True):
+	def perform_request(
+		self,
+		prompt,
+		temperature=1.0,
+		top_k=40,
+		top_p=0.9,
+		seed=0,
+		model="GPTJ_6B",
+		stream=True
+	):
 		# bunch of validation
 		## TextSynth is picky about formatting
 		model = self._format_model(model)
 		if not isinstance(temperature, float):
 			temperature = float(temperature)
-		if temperature<=0.1 or temperature>10.0:
+		if temperature <= 0.1 or temperature > 10.0:
 			raise TextSynthError("temperature must be between 0.1 and 10.0")
 		if not isinstance(top_k, int):
 			top_k = int(top_k)
-		if top_k<1 or top_k>1000:
+		if top_k < 1 or top_k > 1000:
 			raise TextSynthError("top-k must be between 1 and 1000")
 		if not isinstance(top_p, float):
 			top_p = float(top_p)
-		if top_p<=0 or top_p>1:
+		if top_p <= 0 or top_p > 1:
 			raise TextSynthError("top-p must be between 0 and 1")
 		if not isinstance(seed, int):
 			seed = int(seed)
@@ -61,7 +70,7 @@ class TextSynth:
 				"seed": seed,
 				"stream": stream,
 			},
-			stream=stream
+			stream=stream,
 		)
 		r.raise_for_status()
 		return r
@@ -82,5 +91,5 @@ class TextSynth:
 
 	def _requests_session(self):
 		session = requests.Session()
-		#session.headers["User-Agent"] = "Python TextSynth wrapper"
+		# session.headers["User-Agent"] = "Python TextSynth wrapper"
 		return session
