@@ -16,7 +16,7 @@ class TextSynth:
 	base_url = "https://bellard.org/textsynth/api/v1/"
 	engines = (
 		"gpt2_345M",
-		"Gpt2_1.6B",
+		"gpt2_1558M",
 		"gptj_6B",
 	)
 
@@ -41,6 +41,22 @@ class TextSynth:
 		model="GPTJ_6B",
 		stream=True
 	):
+		"""Perform the request.
+		In almost all cases, you want to use either complete or completion_generator, with any number of the below as keyword arguments.
+
+		args:
+			prompt (str): The text you wish to have automatically completed.
+				Supposedly has a max length of 4096KB
+			temperature (float): Divide the logits (=log(probability) of the tokens) by the temperature value (0.1 <= temperature <= 10). Defaults to 1.0
+			top_k (int): Keep only the top-k tokens with the highest probability (1 <= top-k <= 1000). Defaults to 40
+			top_p (float): Keep the top tokens having cumulative probability >= top-p (0 < top-p <= 1). Defaults to 0.9
+			seed (int): Seed of the random number generator. Use 0 for a random seed. Defaults to 0
+			model (str): String representing the model name and number of parameters. Call self.engines for a list.
+				note: This is case sensitive
+
+		returns:
+			requests.Response
+		"""
 		# bunch of validation
 		## TextSynth is picky about formatting
 		model = self._format_model(model)
@@ -75,8 +91,15 @@ class TextSynth:
 		r.raise_for_status()
 		return r
 
-	def completion_generator(self, prompt, *args, **kwargs):
-		req = self.perform_request(prompt, *args, **kwargs)
+	def completion_generator(self, prompt, **kwargs):
+		"""Generator that completes the prompt.
+		See self.perform_request for a list of possible keyword arguments.
+
+		returns:
+			Generator yielding a tuple of: (text, reached_end, total_tokens).
+				note: total_tokens is 0 unless reached_end is True, signifying the end of the computed response
+		"""
+		req = self.perform_request(prompt, **kwargs)
 		for line in req.iter_lines():
 			if not line:
 				continue
@@ -85,6 +108,12 @@ class TextSynth:
 			yield (j.get("text"), j.get("reached_end"), j.get("total_tokens", 0))
 
 	def complete(self, prompt, **kwargs):
+		"""Completes the provided prompt, blocking until a full response has been computed.
+		See self.perform_request for a list of possible keyword arguments.
+
+		returns:
+			dict: {'text': ..., 'reached_end': True, 'total_tokens': int}
+		"""
 		kwargs["stream"] = False
 		req = self.perform_request(prompt, **kwargs)
 		return req.json()
